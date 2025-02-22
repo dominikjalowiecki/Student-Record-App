@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="pl-PL">
+  <head>
+    <%- include('../partials/head'); -%>
+  </head>
+  <body>
+    <%- include('../partials/header'); -%>
+
+    <main class="container">
+      <h2 class="mb-5">Użytkownicy</h2>
+      <div id="spinner" class="spinner-border d-none" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <div id="content" class="d-none">
+        <button id="add-user" class="btn btn-primary mb-3">Dodaj</button>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="input-group my-3">
+              <input type="search" class="form-control" id="search" />
+              <span class="input-group-text" id="basic-addon2">Szukaj</span>
+            </div>
+          </div>
+        </div>
+        <div style="overflow-x: auto">
+          <table id="users-table" class="table align-middle">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Imię</th>
+                <th scope="col">Nazwisko</th>
+                <th scope="col">Login</th>
+                <th scope="col">Rola</th>
+                <th scope="col">Utworzono</th>
+                <th scope="col">Opcje</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <nav aria-label="Paginacja">
+          <ul class="pagination">
+            <li class="page-item">
+              <p id="pagination-previous" class="page-link disabled">
+                Poprzednia
+              </p>
+            </li>
+            <li class="page-item">
+              <p id="pagination-next" class="page-link disabled">Następna</p>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </main>
+
+    <div
+      class="modal fade"
+      id="add-user-modal"
+      data-bs-backdrop="static"
+      tabindex="-1"
+      aria-labelledby="add-user-label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="add-user-label">
+              Dodaj użytkownika
+            </h1>
+            <button
+              type="button"
+              class="btn-close close-modal"
+              aria-label="Zamknij"
+            ></button>
+          </div>
+          <form id="add-user-form" class="needs-validation" novalidate>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="name" class="form-label">Imię</label>
+                <input
+                  type="text"
+                  name="name"
+                  class="form-control"
+                  id="name"
+                  maxlength="200"
+                  required
+                />
+                <div class="invalid-feedback">Imię jest wymagane</div>
+              </div>
+              <div class="mb-3">
+                <label for="surname" class="form-label">Nazwisko</label>
+                <input
+                  type="text"
+                  name="surname"
+                  class="form-control"
+                  id="surname"
+                  maxlength="200"
+                  required
+                />
+                <div class="invalid-feedback">Nazwisko jest wymagane</div>
+              </div>
+              <div class="mb-3">
+                <label for="login" class="form-label">Login</label>
+                <input
+                  type="text"
+                  name="login"
+                  class="form-control"
+                  id="login"
+                  maxlength="200"
+                  required
+                />
+                <div class="invalid-feedback">Login jest wymagany</div>
+              </div>
+              <div class="mb-3">
+                <label for="password" class="form-label">Hasło</label>
+                <input
+                  type="password"
+                  name="password"
+                  class="form-control"
+                  id="password"
+                  minlength="8"
+                  required
+                />
+                <div class="invalid-feedback">Hasło jest wymagane</div>
+              </div>
+              <div class="mb-3">
+                <label for="role" class="form-label">Rola</label>
+                <select
+                  name="role"
+                  class="form-select"
+                  id="role"
+                  aria-label="Wybierz rolę"
+                  required
+                >
+                  <option value="">Wybierz rolę</option>
+                  <option value="Nauczyciel">Nauczyciel</option>
+                  <option value="Administrator">Administrator</option>
+                </select>
+                <div class="invalid-feedback">Rola jest wymagana</div>
+              </div>
+              <div class="mb-3">
+                <label for="subjects" class="form-label">Przedmioty</label>
+                <select
+                  name="subjects"
+                  class="form-select"
+                  id="add-subjects"
+                  aria-label="Wybierz przedmioty"
+                  multiple
+                ></select>
+              </div>
+              <div
+                class="alert alert-danger text-center"
+                id="add-user-error"
+                role="alert"
+                style="display: none"
+              ></div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary close-modal">
+                Zamknij
+              </button>
+              <button type="submit" class="btn btn-primary">Dodaj</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="edit-user-modal"
+      data-bs-backdrop="static"
+      tabindex="-1"
+      aria-labelledby="edit-user-label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="edit-user-label">
+              Edytuj użytkownika
+            </h1>
+            <button
+              type="button"
+              class="btn-close close-modal"
+              aria-label="Zamknij"
+            ></button>
+          </div>
+          <form id="edit-user-form" class="needs-validation" novalidate>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="name" class="form-label">Imię</label>
+                <input
+                  type="text"
+                  name="name"
+                  class="form-control"
+                  id="name"
+                  maxlength="200"
+                  required
+                />
+                <div class="invalid-feedback">Imię jest wymagane</div>
+              </div>
+              <div class="mb-3">
+                <label for="surname" class="form-label">Nazwisko</label>
+                <input
+                  type="text"
+                  name="surname"
+                  class="form-control"
+                  id="surname"
+                  maxlength="200"
+                  required
+                />
+                <div class="invalid-feedback">Nazwisko jest wymagane</div>
+              </div>
+              <div class="mb-3">
+                <label for="login" class="form-label">Login</label>
+                <input
+                  type="text"
+                  name="login"
+                  class="form-control"
+                  id="login"
+                  maxlength="200"
+                  required
+                />
+                <div class="invalid-feedback">Login jest wymagany</div>
+              </div>
+              <div class="mb-3">
+                <label for="password" class="form-label">Hasło</label>
+                <input
+                  type="password"
+                  name="password"
+                  class="form-control"
+                  id="password"
+                  minlength="8"
+                />
+                <div class="invalid-feedback">Hasło jest wymagane</div>
+              </div>
+              <div class="mb-3">
+                <label for="role" class="form-label">Rola</label>
+                <select
+                  name="role"
+                  class="form-select"
+                  id="role"
+                  aria-label="Wybierz rolę"
+                  required
+                >
+                  <option value="">Wybierz rolę</option>
+                  <option value="Nauczyciel">Nauczyciel</option>
+                  <option value="Administrator">Administrator</option>
+                </select>
+                <div class="invalid-feedback">Rola jest wymagana</div>
+              </div>
+              <div class="mb-3">
+                <label for="subjects" class="form-label">Przedmioty</label>
+                <select
+                  name="subjects"
+                  class="form-select"
+                  id="edit-subjects"
+                  aria-label="Wybierz przedmioty"
+                  multiple
+                ></select>
+              </div>
+              <div
+                class="alert alert-danger text-center"
+                id="edit-user-error"
+                role="alert"
+                style="display: none"
+              ></div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary close-modal">
+                Zamknij
+              </button>
+              <button type="submit" class="btn btn-primary">Edytuj</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="delete-user-modal"
+      data-bs-backdrop="static"
+      tabindex="-1"
+      aria-labelledby="delete-user-label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="delete-user-label">
+              Usuń użytkownika
+            </h1>
+            <button
+              type="button"
+              class="btn-close close-modal"
+              aria-label="Zamknij"
+            ></button>
+          </div>
+          <form id="delete-user-form" class="needs-validation" novalidate>
+            <div class="modal-body">
+              <p>Czy na pewno chcesz usunąć użytkownika?</p>
+              <div
+                class="alert alert-danger text-center"
+                id="delete-user-error"
+                role="alert"
+                style="display: none"
+              ></div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary close-modal">
+                Zamknij
+              </button>
+              <button type="submit" class="btn btn-danger">Usuń</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <%- include('../partials/footer'); -%>
+
+    <script>
+      $(document).ready(function () {
+        let selectedIdUser;
+
+        const token = localStorage.getItem('ADL.token');
+
+        const addUser = $('#add-user');
+        const addUserModal = new bootstrap.Modal($('#add-user-modal'));
+        const addUserForm = $('#add-user-form');
+        const addUserError = $('#add-user-error');
+
+        const editUserModal = new bootstrap.Modal($('#edit-user-modal'));
+        const editUserForm = $('#edit-user-form');
+        const editUserError = $('#edit-user-error');
+
+        const deleteUserModal = new bootstrap.Modal($('#delete-user-modal'));
+        const deleteUserForm = $('#delete-user-form');
+        const deleteUserError = $('#delete-user-error');
+
+        const usersTable = $('#users-table');
+        const paginationPrevious = $('#pagination-previous');
+        const paginationNext = $('#pagination-next');
+
+        const spinner = $('#spinner');
+        const content = $('#content');
+
+        const search = $('#search');
+
+        let searchVal = '';
+        search.on('blur', function (e) {
+          searchVal = search.val();
+          page = 1;
+          getUsers();
+        });
+
+        const addSubjects = $('#add-subjects');
+        const editSubjects = $('#edit-subjects');
+
+        let page = 1;
+        let users = null;
+
+        if (!token) {
+          window.location.replace('/sign-in');
+          return;
+        }
+
+        $('.close-modal').each(function () {
+          this.addEventListener('click', function () {
+            addUserModal.hide();
+            addUserForm.trigger('reset');
+            addUserForm.removeClass('was-validated');
+            editUserModal.hide();
+            editUserForm.trigger('reset');
+            editUserForm.removeClass('was-validated');
+            deleteUserModal.hide();
+          });
+        });
+
+        function getSelectIdValues(select) {
+          let result = [];
+          let options = select && select.options;
+          let opt;
+
+          for (let i = 0, iLen = options.length; i < iLen; i++) {
+            opt = options[i];
+
+            if (opt.selected) {
+              result.push(Number(opt.value));
+            }
+          }
+
+          return result;
+        }
+
+        usersTable.on('click', function (event) {
+          const target = $(event.target);
+          if (target.get(0).tagName === 'BUTTON') {
+            if (target.hasClass('edit-user')) {
+              selectedIdUser = target.data('id');
+              const selectedUser = users.find(
+                (user) => user.id_user == selectedIdUser
+              );
+
+              editUserForm.find('#name').val(selectedUser.name);
+              editUserForm.find('#surname').val(selectedUser.surname);
+              editUserForm.find('#login').val(selectedUser.login);
+              editUserForm.find('#role').val(selectedUser.role);
+              editUserForm
+                .find('#edit-subjects')
+                .val(
+                  selectedUser.subjects.map((subject) => subject.id_subject)
+                );
+
+              editUserModal.show();
+            } else if (target.hasClass('delete-user')) {
+              selectedIdUser = target.data('id');
+              deleteUserModal.show();
+            }
+          }
+        });
+
+        addUser.on('click', function () {
+          addUserModal.show();
+        });
+
+        addUserForm.on('submit', function (event) {
+          event.preventDefault();
+
+          if (this.checkValidity()) {
+            const { name, surname, login, password, role, subjects } = this;
+
+            const idsSubjects = getSelectIdValues(subjects);
+
+            addUserError.fadeOut();
+            $.ajax({
+              url: '/api/users',
+              method: 'POST',
+              contentType: 'application/json',
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+              data: JSON.stringify({
+                name: name.value,
+                surname: surname.value,
+                login: login.value,
+                password: password.value,
+                role: role.value,
+                subjects: idsSubjects,
+              }),
+            })
+              .done((res) => {
+                page = 1;
+                getUsers();
+                addUserModal.hide();
+                $(this).trigger('reset');
+                $(this).removeClass('was-validated');
+              })
+              .fail((err) => {
+                addUserError.text(err.responseJSON.message).fadeIn();
+              });
+          }
+
+          $(this).addClass('was-validated');
+        });
+
+        editUserForm.on('submit', function (event) {
+          event.preventDefault();
+
+          if (this.checkValidity()) {
+            const { name, surname, login, password, role, subjects } = this;
+
+            const idsSubjects = getSelectIdValues(subjects);
+
+            const payload = {
+              name: name.value,
+              surname: surname.value,
+              login: login.value,
+              role: role.value,
+              subjects: idsSubjects,
+            };
+
+            if (password.value) {
+              payload.password = password.value;
+            }
+
+            editUserError.fadeOut();
+            $.ajax({
+              url: `/api/users/${selectedIdUser}`,
+              method: 'PUT',
+              contentType: 'application/json',
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+              data: JSON.stringify(payload),
+            })
+              .done((res) => {
+                page = 1;
+                getUsers();
+                editUserModal.hide();
+                $(this).trigger('reset');
+                $(this).removeClass('was-validated');
+              })
+              .fail((err) => {
+                editUserError.text(err.responseJSON.message).fadeIn();
+              });
+          }
+
+          $(this).addClass('was-validated');
+        });
+
+        deleteUserForm.on('submit', function (event) {
+          event.preventDefault();
+
+          deleteUserError.fadeOut();
+          $.ajax({
+            url: `/api/users/${selectedIdUser}`,
+            method: 'DELETE',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+            .done((res) => {
+              page = 1;
+              getUsers();
+              deleteUserModal.hide();
+            })
+            .fail((err) => {
+              deleteUserError.text(err.responseJSON.message).fadeIn();
+            });
+        });
+
+        $.ajax({
+          url: '/api/subjects',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }).done((res) => {
+          let subjectsBody = '';
+          for (const subject of res) {
+            subjectsBody += `<option value="${subject.id_subject}">${subject.name}</option>`;
+          }
+
+          addSubjects.html(subjectsBody);
+          editSubjects.html(subjectsBody);
+        });
+
+        function getUsers() {
+          spinner.removeClass('d-none');
+          content.addClass('d-none');
+
+          $.ajax({
+            url: '/api/users/me',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }).done((res) => {
+            if (res.role === 'Administrator') {
+              paginationPrevious.addClass('disabled');
+              paginationNext.addClass('disabled');
+
+              $.ajax({
+                url: `/api/users?search=${searchVal}&page=${page}`,
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }).done((res) => {
+                let tableBody = '';
+                for (let i = 0; i < res.rows.length; i++) {
+                  const user = res.rows[i];
+                  tableBody += `<tr><th>${
+                    (res.currentPage - 1) * 10 + (i + 1)
+                  }</th><td>${user.name}</td><td>${user.surname}</td><td>${
+                    user.login
+                  }</td><td>${user.role}</td><td>${new Date(
+                    user.created
+                  ).toLocaleString()}</td><td><button class="btn btn-primary m-1 edit-user" data-id="${
+                    user.id_user
+                  }">Edytuj</button><button class="btn btn-danger m-1 delete-user" data-id="${
+                    user.id_user
+                  }">Usuń</button></td></tr>`;
+                }
+
+                users = res.rows;
+
+                usersTable.find('tbody').html(tableBody);
+
+                if (page !== res.currentPage) {
+                  page = res.currentPage;
+                  getUsers();
+                  return;
+                }
+
+                if (res.currentPage > 1) {
+                  paginationPrevious.removeClass('disabled');
+                }
+
+                if (res.pages > res.currentPage) {
+                  paginationNext.removeClass('disabled');
+                }
+
+                spinner.addClass('d-none');
+                content.removeClass('d-none');
+              });
+            } else {
+              window.location.replace('/profile');
+            }
+          });
+        }
+
+        paginationPrevious.on('click', function () {
+          if (!$(this).hasClass('disabled')) {
+            --page;
+            getUsers();
+          }
+        });
+
+        paginationNext.on('click', function () {
+          if (!$(this).hasClass('disabled')) {
+            ++page;
+            getUsers();
+          }
+        });
+
+        getUsers();
+      });
+    </script>
+  </body>
+</html>

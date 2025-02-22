@@ -1,0 +1,37 @@
+<footer id="#footer" class="border-top mt-5">
+  <div class="container text-center py-3">
+    <a href="https://github.com/dominikjalowiecki" target="_blank"
+      >Dominik Jałowiecki &copy; 2024</a
+    >
+  </div>
+</footer>
+<script src="/js/bootstrap.bundle.min.js"></script>
+<script src="/js/jquery-3.7.1.min.js"></script>
+<script>
+  $(document).ready(function () {
+    const token = localStorage.getItem('ADL.token');
+
+    const unauthorizedNav = $('#unauthorized-nav');
+    const administratorNav = $('#administrator-nav');
+    const teacherNav = $('#teacher-nav');
+    const authorizedNav = $('#authorized-nav');
+
+    if (token) {
+      unauthorizedNav.css('display', 'none');
+      authorizedNav.css('display', 'flex');
+
+      $.ajax({
+        url: '/api/users/me',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }).done((res) => {
+        if (res.role === 'Administrator') {
+          administratorNav.css('display', 'flex');
+        } else if (res.role === 'Nauczyciel') {
+          teacherNav.css('display', 'flex');
+        }
+      });
+    }
+  });
+</script>

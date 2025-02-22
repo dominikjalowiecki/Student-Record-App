@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="pl-PL">
+  <head>
+    <%- include('../partials/head'); -%>
+  </head>
+  <body>
+    <%- include('../partials/header'); -%>
+
+    <main class="container">
+      <h2 class="mb-5">Uczniowie</h2>
+      <div id="spinner" class="spinner-border d-none" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <div id="content" class="d-none">
+        <button id="add-student" class="btn btn-primary mb-3">Dodaj</button>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="input-group my-3">
+              <input type="search" class="form-control" id="search" />
+              <span class="input-group-text" id="basic-addon2">Szukaj</span>
+            </div>
+          </div>
+        </div>
+        <div style="overflow-x: auto">
+          <table id="students-table" class="table align-middle">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Imię</th>
+                <th scope="col">Nazwisko</th>
+                <th scope="col">Utworzono</th>
+                <th scope="col">Opcje</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <nav aria-label="Paginacja">
+          <ul class="pagination">
+            <li class="page-item">
+              <p id="pagination-previous" class="page-link disabled">
+                Poprzednia
+              </p>
+            </li>
+            <li class="page-item">
+              <p id="pagination-next" class="page-link disabled">Następna</p>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </main>
+
+    <div
+      class="modal fade"
+      id="add-student-modal"
+      data-bs-backdrop="static"
+      tabindex="-1"
+      aria-labelledby="add-student-label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="add-student-label">
+              Dodaj ucznia
+            </h1>
+            <button
+              type="button"
+              class="btn-close close-modal"
+              aria-label="Zamknij"
+            ></button>
+          </div>
+          <form id="add-student-form" class="needs-validation" novalidate>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="name" class="form-label">Imię</label>
+                <input
+                  type="text"
+                  name="name"
+                  class="form-control"
+                  id="name"
+                  maxlength="200"
+                  required
+                />
+                <div class="invalid-feedback">Imię jest wymagane</div>
+              </div>
+              <div class="mb-3">
+                <label for="surname" class="form-label">Nazwisko</label>
+                <input
+                  type="text"
+                  name="surname"
+                  class="form-control"
+                  id="surname"
+                  maxlength="200"
+                  required
+                />
+                <div class="invalid-feedback">Nazwisko jest wymagane</div>
+              </div>
+              <div
+                class="alert alert-danger text-center"
+                id="add-student-error"
+                role="alert"
+                style="display: none"
+              ></div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary close-modal">
+                Zamknij
+              </button>
+              <button type="submit" class="btn btn-primary">Dodaj</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="delete-student-modal"
+      data-bs-backdrop="static"
+      tabindex="-1"
+      aria-labelledby="delete-student-label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="delete-student-label">
+              Usuń ucznia
+            </h1>
+            <button
+              type="button"
+              class="btn-close close-modal"
+              aria-label="Zamknij"
+            ></button>
+          </div>
+          <form id="delete-student-form" class="needs-validation" novalidate>
+            <div class="modal-body">
+              <p>Czy na pewno chcesz usunąć ucznia?</p>
+              <div
+                class="alert alert-danger text-center"
+                id="delete-student-error"
+                role="alert"
+                style="display: none"
+              ></div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary close-modal">
+                Zamknij
+              </button>
+              <button type="submit" class="btn btn-danger">Usuń</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <%- include('../partials/footer'); -%>
+
+    <script>
+      $(document).ready(function () {
+        let selectedIdStudent;
+
+        const token = localStorage.getItem('ADL.token');
+
+        const addStudent = $('#add-student');
+        const addStudentModal = new bootstrap.Modal($('#add-student-modal'));
+        const addStudentForm = $('#add-student-form');
+        const addStudentError = $('#add-student-error');
+
+        const deleteStudentModal = new bootstrap.Modal(
+          $('#delete-student-modal')
+        );
+        const deleteStudentForm = $('#delete-student-form');
+        const deleteStudentError = $('#delete-student-error');
+
+        const studentsTable = $('#students-table');
+        const paginationPrevious = $('#pagination-previous');
+        const paginationNext = $('#pagination-next');
+
+        const spinner = $('#spinner');
+        const content = $('#content');
+
+        const search = $('#search');
+
+        let searchVal = '';
+        search.on('blur', function (e) {
+          searchVal = search.val();
+          page = 1;
+          getStudents();
+        });
+
+        let page = 1;
+
+        if (!token) {
+          window.location.replace('/sign-in');
+          return;
+        }
+
+        $('.close-modal').each(function () {
+          this.addEventListener('click', function () {
+            addStudentModal.hide();
+            addStudentForm.trigger('reset');
+            addStudentForm.removeClass('was-validated');
+            deleteStudentModal.hide();
+          });
+        });
+
+        studentsTable.on('click', function (event) {
+          const target = $(event.target);
+          if (target.get(0).tagName === 'BUTTON') {
+            if (target.hasClass('delete-student')) {
+              selectedIdStudent = target.data('id');
+              deleteStudentModal.show();
+            }
+          }
+        });
+
+        addStudent.on('click', function () {
+          addStudentModal.show();
+        });
+
+        addStudentForm.on('submit', function (event) {
+          event.preventDefault();
+
+          if (this.checkValidity()) {
+            const { name, surname } = this;
+
+            addStudentError.fadeOut();
+            $.ajax({
+              url: '/api/students',
+              method: 'POST',
+              contentType: 'application/json',
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+              data: JSON.stringify({
+                name: name.value,
+                surname: surname.value,
+              }),
+            })
+              .done((res) => {
+                page = 1;
+                getStudents();
+                addStudentModal.hide();
+                $(this).trigger('reset');
+                $(this).removeClass('was-validated');
+              })
+              .fail((err) => {
+                addStudentError.text(err.responseJSON.message).fadeIn();
+              });
+          }
+
+          $(this).addClass('was-validated');
+        });
+
+        deleteStudentForm.on('submit', function (event) {
+          event.preventDefault();
+
+          deleteStudentError.fadeOut();
+          $.ajax({
+            url: `/api/students/${selectedIdStudent}`,
+            method: 'DELETE',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+            .done((res) => {
+              page = 1;
+              getStudents();
+              deleteStudentModal.hide();
+            })
+            .fail((err) => {
+              deleteStudentError.text(err.responseJSON.message).fadeIn();
+            });
+        });
+
+        function getStudents() {
+          spinner.removeClass('d-none');
+          content.addClass('d-none');
+
+          $.ajax({
+            url: '/api/users/me',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }).done((res) => {
+            if (res.role === 'Nauczyciel') {
+              paginationPrevious.addClass('disabled');
+              paginationNext.addClass('disabled');
+
+              $.ajax({
+                url: `/api/students?search=${searchVal}&page=${page}`,
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }).done((res) => {
+                let tableBody = '';
+                for (let i = 0; i < res.rows.length; i++) {
+                  const student = res.rows[i];
+                  tableBody += `<tr><th>${
+                    (res.currentPage - 1) * 10 + (i + 1)
+                  }</th><td>${student.name}</td><td>${
+                    student.surname
+                  }</td><td>${new Date(
+                    student.created
+                  ).toLocaleString()}</td><td><button class="btn btn-danger m-1 delete-student" data-id="${
+                    student.id_student
+                  }">Usuń</button></td></tr>`;
+                }
+
+                studentsTable.find('tbody').html(tableBody);
+
+                if (page !== res.currentPage) {
+                  page = res.currentPage;
+                  getStudents();
+                  return;
+                }
+
+                if (res.currentPage > 1) {
+                  paginationPrevious.removeClass('disabled');
+                }
+
+                if (res.pages > res.currentPage) {
+                  paginationNext.removeClass('disabled');
+                }
+
+                spinner.addClass('d-none');
+                content.removeClass('d-none');
+              });
+            } else {
+              window.location.replace('/profile');
+            }
+          });
+        }
+
+        paginationPrevious.on('click', function () {
+          if (!$(this).hasClass('disabled')) {
+            --page;
+            getStudents();
+          }
+        });
+
+        paginationNext.on('click', function () {
+          if (!$(this).hasClass('disabled')) {
+            ++page;
+            getStudents();
+          }
+        });
+
+        getStudents();
+      });
+    </script>
+  </body>
+</html>

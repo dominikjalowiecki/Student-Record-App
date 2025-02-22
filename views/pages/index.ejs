@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pl-PL">
+  <head>
+    <%- include('../partials/head'); -%>
+  </head>
+  <body>
+    <%- include('../partials/header'); -%>
+
+    <main class="container">
+      <div class="my-5">
+        <div class="p-5 text-center bg-body-tertiary rounded-3">
+          <h1 class="text-body-emphasis">Aplikacja dziennika lekcyjnego</h1>
+          <a class="btn btn-primary mt-3" id="sign-in-link" href="/sign-in"
+            >Zaloguj się</a
+          >
+        </div>
+      </div>
+    </main>
+
+    <%- include('../partials/footer'); -%>
+
+    <script>
+      $(document).ready(function () {
+        const token = localStorage.getItem('ADL.token');
+
+        const signInLink = $('#sign-in-link');
+
+        if (token) {
+          signInLink.css('display', 'none');
+        }
+
+        $('#action-btn').on('click', function () {
+          $('#sample-paragraph').slideToggle('normal', function () {
+            $(this).remove();
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

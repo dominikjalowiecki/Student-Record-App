@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pl-PL">
+  <head>
+    <%- include('../partials/head'); -%>
+  </head>
+  <body>
+    <%- include('../partials/header'); -%>
+
+    <main class="container">
+      <h2 class="mb-5">Przedmioty</h2>
+      <div id="spinner" class="spinner-border d-none" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <div id="content" class="d-none">
+        <button id="add-subject" class="btn btn-primary mb-3">Dodaj</button>
+        <div style="overflow-x: auto">
+          <table id="subjects-table" class="table align-middle">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Nazwa</th>
+                <th scope="col">Opcje</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <div
+      class="modal fade"
+      id="add-subject-modal"
+      data-bs-backdrop="static"
+      tabindex="-1"
+      aria-labelledby="add-subject-label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="add-subject-label">
+              Dodaj przedmiot
+            </h1>
+            <button
+              type="button"
+              class="btn-close close-modal"
+              aria-label="Zamknij"
+            ></button>
+          </div>
+          <form id="add-subject-form" class="needs-validation" novalidate>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="name" class="form-label">Nazwa</label>
+                <input
+                  type="text"
+                  name="name"
+                  class="form-control"
+                  id="name"
+                  maxlength="200"
+                  required
+                />
+                <div class="invalid-feedback">Nazwa jest wymagana</div>
+              </div>
+              <div
+                class="alert alert-danger text-center"
+                id="add-subject-error"
+                role="alert"
+                style="display: none"
+              ></div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary close-modal">
+                Zamknij
+              </button>
+              <button type="submit" class="btn btn-primary">Dodaj</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="delete-subject-modal"
+      data-bs-backdrop="static"
+      tabindex="-1"
+      aria-labelledby="delete-subject-label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="delete-subject-label">
+              Usuń przedmiot
+            </h1>
+            <button
+              type="button"
+              class="btn-close close-modal"
+              aria-label="Zamknij"
+            ></button>
+          </div>
+          <form id="delete-subject-form" class="needs-validation" novalidate>
+            <div class="modal-body">
+              <p>Czy na pewno chcesz usunąć przedmiot?</p>
+              <div
+                class="alert alert-danger text-center"
+                id="delete-subject-error"
+                role="alert"
+                style="display: none"
+              ></div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary close-modal">
+                Zamknij
+              </button>
+              <button type="submit" class="btn btn-danger">Usuń</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <%- include('../partials/footer'); -%>
+
+    <script>
+      $(document).ready(function () {
+        let selectedIdSubject;
+
+        const token = localStorage.getItem('ADL.token');
+
+        const addSubject = $('#add-subject');
+        const addSubjectModal = new bootstrap.Modal($('#add-subject-modal'));
+        const addSubjectForm = $('#add-subject-form');
+        const addSubjectError = $('#add-subject-error');
+
+        const deleteSubjectModal = new bootstrap.Modal(
+          $('#delete-subject-modal')
+        );
+        const deleteSubjectForm = $('#delete-subject-form');
+        const deleteSubjectError = $('#delete-subject-error');
+
+        const subjectsTable = $('#subjects-table');
+
+        const spinner = $('#spinner');
+        const content = $('#content');
+
+        if (!token) {
+          window.location.replace('/sign-in');
+          return;
+        }
+
+        $('.close-modal').each(function () {
+          this.addEventListener('click', function () {
+            addSubjectModal.hide();
+            addSubjectForm.trigger('reset');
+            addSubjectForm.removeClass('was-validated');
+            deleteSubjectModal.hide();
+          });
+        });
+
+        subjectsTable.on('click', function (event) {
+          const target = $(event.target);
+          if (target.get(0).tagName === 'BUTTON') {
+            if (target.hasClass('delete-subject')) {
+              selectedIdSubject = target.data('id');
+              deleteSubjectModal.show();
+            }
+          }
+        });
+
+        addSubject.on('click', function () {
+          addSubjectModal.show();
+        });
+
+        addSubjectForm.on('submit', function (event) {
+          event.preventDefault();
+
+          if (this.checkValidity()) {
+            const { name } = this;
+
+            addSubjectError.fadeOut();
+            $.ajax({
+              url: '/api/subjects',
+              method: 'POST',
+              contentType: 'application/json',
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+              data: JSON.stringify({
+                name: name.value,
+              }),
+            })
+              .done((res) => {
+                getSubjects();
+                addSubjectModal.hide();
+                $(this).trigger('reset');
+                $(this).removeClass('was-validated');
+              })
+              .fail((err) => {
+                addSubjectError.text(err.responseJSON.message).fadeIn();
+              });
+          }
+
+          $(this).addClass('was-validated');
+        });
+
+        deleteSubjectForm.on('submit', function (event) {
+          event.preventDefault();
+
+          deleteSubjectError.fadeOut();
+          $.ajax({
+            url: `/api/subjects/${selectedIdSubject}`,
+            method: 'DELETE',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+            .done((res) => {
+              getSubjects();
+              deleteSubjectModal.hide();
+            })
+            .fail((err) => {
+              deleteSubjectError.text(err.responseJSON.message).fadeIn();
+            });
+        });
+
+        function getSubjects() {
+          spinner.removeClass('d-none');
+          content.addClass('d-none');
+
+          $.ajax({
+            url: '/api/users/me',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }).done((res) => {
+            if (res.role === 'Administrator') {
+              $.ajax({
+                url: `/api/subjects`,
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }).done((res) => {
+                let tableBody = '';
+                for (let i = 0; i < res.length; i++) {
+                  const subject = res[i];
+                  tableBody += `<tr><th>${i + 1}</th><td>${
+                    subject.name
+                  }</td><td><button class="btn btn-danger m-1 delete-subject" data-id="${
+                    subject.id_subject
+                  }">Usuń</button></td></tr>`;
+                }
+
+                subjectsTable.find('tbody').html(tableBody);
+
+                spinner.addClass('d-none');
+                content.removeClass('d-none');
+              });
+            } else {
+              window.location.replace('/profile');
+            }
+          });
+        }
+
+        getSubjects();
+      });
+    </script>
+  </body>
+</html>

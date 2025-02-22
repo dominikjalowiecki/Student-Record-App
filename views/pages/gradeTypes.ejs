@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="pl-PL">
+  <head>
+    <%- include('../partials/head'); -%>
+  </head>
+  <body>
+    <%- include('../partials/header'); -%>
+
+    <main class="container">
+      <h2 class="mb-5">Typy ocen</h2>
+      <div id="spinner" class="spinner-border d-none" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <div id="content" class="d-none">
+        <button id="add-grade-type" class="btn btn-primary mb-3">Dodaj</button>
+        <div style="overflow-x: auto">
+          <table id="grade-types-table" class="table align-middle">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Nazwa</th>
+                <th scope="col">Waga</th>
+                <th scope="col">Obecność anuluje</th>
+                <th scope="col">Opcje</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <div
+      class="modal fade"
+      id="add-grade-type-modal"
+      data-bs-backdrop="static"
+      tabindex="-1"
+      aria-labelledby="add-grade-type-label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="add-grade-type-label">
+              Dodaj typ oceny
+            </h1>
+            <button
+              type="button"
+              class="btn-close close-modal"
+              aria-label="Zamknij"
+            ></button>
+          </div>
+          <form id="add-grade-type-form" class="needs-validation" novalidate>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="name" class="form-label">Nazwa</label>
+                <input
+                  type="text"
+                  name="name"
+                  class="form-control"
+                  id="name"
+                  maxlength="200"
+                  required
+                />
+                <div class="invalid-feedback">Nazwa jest wymagana</div>
+              </div>
+              <div class="mb-3">
+                <label for="weightage" class="form-label">Waga</label>
+                <input
+                  type="number"
+                  name="weightage"
+                  class="form-control"
+                  id="weightage"
+                  min="0.1"
+                  max="1"
+                  step="0.01"
+                  required
+                />
+                <div class="invalid-feedback">Nieprawidłowa waga</div>
+              </div>
+              <div class="mb-3">
+                <input
+                  type="checkbox"
+                  name="presenceCancel"
+                  class="form-check-input"
+                  id="presenceCancel"
+                />
+                <label for="presenceCancel" class="form-label"
+                  >Obecność anuluje</label
+                >
+              </div>
+              <div
+                class="alert alert-danger text-center"
+                id="add-grade-type-error"
+                role="alert"
+                style="display: none"
+              ></div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary close-modal">
+                Zamknij
+              </button>
+              <button type="submit" class="btn btn-primary">Dodaj</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="delete-grade-type-modal"
+      data-bs-backdrop="static"
+      tabindex="-1"
+      aria-labelledby="delete-grade-type-label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="delete-grade-type-label">
+              Usuń typ oceny
+            </h1>
+            <button
+              type="button"
+              class="btn-close close-modal"
+              aria-label="Zamknij"
+            ></button>
+          </div>
+          <form id="delete-grade-type-form" class="needs-validation" novalidate>
+            <div class="modal-body">
+              <p>Czy na pewno chcesz usunąć typ oceny?</p>
+              <div
+                class="alert alert-danger text-center"
+                id="delete-grade-type-error"
+                role="alert"
+                style="display: none"
+              ></div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary close-modal">
+                Zamknij
+              </button>
+              <button type="submit" class="btn btn-danger">Usuń</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <%- include('../partials/footer'); -%>
+
+    <script>
+      $(document).ready(function () {
+        let selectedIdGradeType;
+
+        const token = localStorage.getItem('ADL.token');
+
+        const addGradeType = $('#add-grade-type');
+        const addGradeTypeModal = new bootstrap.Modal(
+          $('#add-grade-type-modal')
+        );
+        const addGradeTypeForm = $('#add-grade-type-form');
+        const addGradeTypeError = $('#add-grade-type-error');
+
+        const deleteGradeTypeModal = new bootstrap.Modal(
+          $('#delete-grade-type-modal')
+        );
+        const deleteGradeTypeForm = $('#delete-grade-type-form');
+        const deleteGradeTypeError = $('#delete-grade-type-error');
+
+        const gradeTypesTable = $('#grade-types-table');
+
+        const spinner = $('#spinner');
+        const content = $('#content');
+
+        if (!token) {
+          window.location.replace('/sign-in');
+          return;
+        }
+
+        $('.close-modal').each(function () {
+          this.addEventListener('click', function () {
+            addGradeTypeModal.hide();
+            addGradeTypeForm.trigger('reset');
+            addGradeTypeForm.removeClass('was-validated');
+            deleteGradeTypeModal.hide();
+          });
+        });
+
+        gradeTypesTable.on('click', function (event) {
+          const target = $(event.target);
+          if (target.get(0).tagName === 'BUTTON') {
+            if (target.hasClass('delete-grade-type')) {
+              selectedIdGradeType = target.data('id');
+              deleteGradeTypeModal.show();
+            }
+          }
+        });
+
+        addGradeType.on('click', function () {
+          addGradeTypeModal.show();
+        });
+
+        addGradeTypeForm.on('submit', function (event) {
+          event.preventDefault();
+
+          if (this.checkValidity()) {
+            const { name, weightage, presenceCancel } = this;
+
+            addGradeTypeError.fadeOut();
+            $.ajax({
+              url: '/api/grade-types',
+              method: 'POST',
+              contentType: 'application/json',
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+              data: JSON.stringify({
+                name: name.value,
+                weightage: Number(weightage.value),
+                presenceCancel: presenceCancel.checked,
+              }),
+            })
+              .done((res) => {
+                getGradeTypes();
+                addGradeTypeModal.hide();
+                $(this).trigger('reset');
+                $(this).removeClass('was-validated');
+              })
+              .fail((err) => {
+                addGradeTypeError.text(err.responseJSON.message).fadeIn();
+              });
+          }
+
+          $(this).addClass('was-validated');
+        });
+
+        deleteGradeTypeForm.on('submit', function (event) {
+          event.preventDefault();
+
+          deleteGradeTypeError.fadeOut();
+          $.ajax({
+            url: `/api/grade-types/${selectedIdGradeType}`,
+            method: 'DELETE',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+            .done((res) => {
+              getGradeTypes();
+              deleteGradeTypeModal.hide();
+            })
+            .fail((err) => {
+              deleteGradeTypeError.text(err.responseJSON.message).fadeIn();
+            });
+        });
+
+        function getGradeTypes() {
+          spinner.removeClass('d-none');
+          content.addClass('d-none');
+
+          $.ajax({
+            url: '/api/users/me',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }).done((res) => {
+            if (res.role === 'Administrator') {
+              $.ajax({
+                url: `/api/grade-types`,
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }).done((res) => {
+                let tableBody = '';
+                for (let i = 0; i < res.length; i++) {
+                  const gradeType = res[i];
+                  tableBody += `<tr><th>${i + 1}</th><td>${
+                    gradeType.name
+                  }</td><td>${gradeType.weightage}</td><td>${
+                    gradeType.presence_cancel
+                      ? '<span class="badge rounded-pill bg-success">Tak</span>'
+                      : '<span class="badge rounded-pill bg-danger">Nie</span>'
+                  }</td><td><button class="btn btn-danger m-1 delete-grade-type" data-id="${
+                    gradeType.id_grade_type
+                  }">Usuń</button></td></tr>`;
+                }
+
+                gradeTypesTable.find('tbody').html(tableBody);
+
+                spinner.addClass('d-none');
+                content.removeClass('d-none');
+              });
+            } else {
+              window.location.replace('/profile');
+            }
+          });
+        }
+
+        getGradeTypes();
+      });
+    </script>
+  </body>
+</html>

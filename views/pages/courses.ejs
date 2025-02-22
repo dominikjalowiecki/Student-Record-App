@@ -1,0 +1,1489 @@
+<!DOCTYPE html>
+<html lang="pl-PL">
+  <head>
+    <%- include('../partials/head'); -%>
+  </head>
+  <body>
+    <%- include('../partials/header'); -%>
+
+    <main class="container">
+      <h2 class="mb-5">Kursy</h2>
+      <div id="spinner" class="spinner-border d-none" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <div id="content" class="d-none">
+        <button id="add-course" class="btn btn-primary mb-3">Dodaj</button>
+        <div style="overflow-x: auto">
+          <table id="courses-table" class="table align-middle">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Nazwa</th>
+                <th scope="col">Dzień</th>
+                <th scope="col">Rozpoczęcie</th>
+                <th scope="col">Zakończenie</th>
+                <th scope="col">Utworzono</th>
+                <th scope="col">Zmodyfikowano</th>
+                <th scope="col">Opcje</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <div
+      class="modal fade"
+      id="add-course-modal"
+      data-bs-backdrop="static"
+      tabindex="-1"
+      aria-labelledby="add-course-label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="add-course-label">Dodaj kurs</h1>
+            <button
+              type="button"
+              class="btn-close close-modal"
+              aria-label="Zamknij"
+            ></button>
+          </div>
+          <form id="add-course-form" class="needs-validation" novalidate>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="name" class="form-label">Nazwa</label>
+                <input
+                  type="text"
+                  name="name"
+                  class="form-control"
+                  id="name"
+                  maxlength="200"
+                  required
+                />
+                <div class="invalid-feedback">Nazwa jest wymagana</div>
+              </div>
+              <div class="mb-3">
+                <label for="addIdUserHasSubject" class="form-label"
+                  >Przedmiot</label
+                >
+                <select
+                  name="idUserHasSubject"
+                  class="form-select"
+                  id="addIdUserHasSubject"
+                  aria-label="Wybierz przedmiot"
+                  required
+                ></select>
+                <div class="invalid-feedback">Przedmiot jest wymagany</div>
+              </div>
+              <div class="mb-3">
+                <label for="day" class="form-label">Dzień</label>
+                <select
+                  name="day"
+                  class="form-select"
+                  id="day"
+                  aria-label="Wybierz dzień"
+                  required
+                >
+                  <option value="">Wybierz dzień</option>
+                  <option value="Poniedziałek">Poniedziałek</option>
+                  <option value="Wtorek">Wtorek</option>
+                  <option value="Środa">Środa</option>
+                  <option value="Czwartek">Czwartek</option>
+                  <option value="Piątek">Piątek</option>
+                  <option value="Sobota">Sobota</option>
+                  <option value="Niedziela">Niedziela</option>
+                </select>
+                <div class="invalid-feedback">Dzień jest wymagany</div>
+              </div>
+              <div class="mb-3">
+                <label for="start" class="form-label">Rozpoczęcie</label>
+                <input
+                  type="time"
+                  name="start"
+                  class="form-control"
+                  id="start"
+                  required
+                />
+                <div class="invalid-feedback">Rozpoczęcie jest wymagane</div>
+              </div>
+              <div class="mb-3">
+                <label for="end" class="form-label">Zakończenie</label>
+                <input
+                  type="time"
+                  name="end"
+                  class="form-control"
+                  id="end"
+                  required
+                />
+                <div class="invalid-feedback">Zakończenie jest wymagane</div>
+              </div>
+              <div class="mb-3">
+                <label for="students" class="form-label">Uczniowie</label>
+                <select
+                  name="students"
+                  class="form-select"
+                  id="add-students"
+                  aria-label="Wybierz uczniów"
+                  multiple
+                  required
+                ></select>
+                <div class="invalid-feedback">Uczniowie są wymagani</div>
+              </div>
+              <div
+                class="alert alert-danger text-center"
+                id="add-course-error"
+                role="alert"
+                style="display: none"
+              ></div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary close-modal">
+                Zamknij
+              </button>
+              <button type="submit" class="btn btn-primary">Dodaj</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="edit-course-modal"
+      data-bs-backdrop="static"
+      tabindex="-1"
+      aria-labelledby="edit-course-label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="edit-course-label">Edytuj kurs</h1>
+            <button
+              type="button"
+              class="btn-close close-modal"
+              aria-label="Zamknij"
+            ></button>
+          </div>
+          <form id="edit-course-form" class="needs-validation" novalidate>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="name" class="form-label">Nazwa</label>
+                <input
+                  type="text"
+                  name="name"
+                  class="form-control"
+                  id="name"
+                  maxlength="200"
+                  required
+                />
+                <div class="invalid-feedback">Nazwa jest wymagana</div>
+              </div>
+              <div class="mb-3">
+                <label for="editIdUserHasSubject" class="form-label"
+                  >Przedmiot</label
+                >
+                <select
+                  name="idUserHasSubject"
+                  class="form-select"
+                  id="editIdUserHasSubject"
+                  aria-label="Wybierz przedmiot"
+                  required
+                  disabled
+                ></select>
+                <div class="invalid-feedback">Przedmiot jest wymagany</div>
+              </div>
+              <div class="mb-3">
+                <label for="day" class="form-label">Dzień</label>
+                <select
+                  name="day"
+                  class="form-select"
+                  id="day"
+                  aria-label="Wybierz dzień"
+                  required
+                >
+                  <option value="">Wybierz dzień</option>
+                  <option value="Poniedziałek">Poniedziałek</option>
+                  <option value="Wtorek">Wtorek</option>
+                  <option value="Środa">Środa</option>
+                  <option value="Czwartek">Czwartek</option>
+                  <option value="Piątek">Piątek</option>
+                  <option value="Sobota">Sobota</option>
+                  <option value="Niedziela">Niedziela</option>
+                </select>
+                <div class="invalid-feedback">Dzień jest wymagany</div>
+              </div>
+              <div class="mb-3">
+                <label for="start" class="form-label">Rozpoczęcie</label>
+                <input
+                  type="time"
+                  name="start"
+                  class="form-control"
+                  id="start"
+                  required
+                />
+                <div class="invalid-feedback">Rozpoczęcie jest wymagane</div>
+              </div>
+              <div class="mb-3">
+                <label for="end" class="form-label">Zakończenie</label>
+                <input
+                  type="time"
+                  name="end"
+                  class="form-control"
+                  id="end"
+                  required
+                />
+                <div class="invalid-feedback">Zakończenie jest wymagane</div>
+              </div>
+              <div class="mb-3">
+                <label for="students" class="form-label">Uczniowie</label>
+                <select
+                  name="students"
+                  class="form-select"
+                  id="edit-students"
+                  aria-label="Wybierz uczniów"
+                  multiple
+                  required
+                ></select>
+                <div class="invalid-feedback">Uczniowie są wymagani</div>
+              </div>
+              <div
+                class="alert alert-danger text-center"
+                id="edit-course-error"
+                role="alert"
+                style="display: none"
+              ></div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary close-modal">
+                Zamknij
+              </button>
+              <button type="submit" class="btn btn-primary">Edytuj</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="delete-course-modal"
+      data-bs-backdrop="static"
+      tabindex="-1"
+      aria-labelledby="delete-course-label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="delete-course-label">Usuń kurs</h1>
+            <button
+              type="button"
+              class="btn-close close-modal"
+              aria-label="Zamknij"
+            ></button>
+          </div>
+          <form id="delete-course-form" class="needs-validation" novalidate>
+            <div class="modal-body">
+              <p>Czy na pewno chcesz usunąć kurs?</p>
+              <div
+                class="alert alert-danger text-center"
+                id="delete-course-error"
+                role="alert"
+                style="display: none"
+              ></div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary close-modal">
+                Zamknij
+              </button>
+              <button type="submit" class="btn btn-danger">Usuń</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal modal-xl fade"
+      id="course-details-modal"
+      data-bs-backdrop="static"
+      tabindex="-1"
+      aria-labelledby="course-details-label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="course-details-label">
+              Szczegóły kursu
+            </h1>
+            <button
+              type="button"
+              class="btn-close close-modal"
+              aria-label="Zamknij"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p>Nazwa: <span id="course-name"></span></p>
+            <p>Dzień: <span id="course-day"></span></p>
+            <p>Rozpoczęcie: <span id="course-start"></span></p>
+            <p>Zakończenie: <span id="course-end"></span></p>
+            <p>Utworzono: <span id="course-created"></span></p>
+            <p>Zmodyfikowano: <span id="course-updated"></span></p>
+            <hr />
+            <h5 class="mb-4">
+              Następne zajęcia:
+              <span class="badge bg-primary" id="next-presence-date"></span>
+            </h5>
+            <table
+              id="course-details-students-table"
+              class="table align-middle"
+            >
+              <thead>
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">Imię</th>
+                  <th scope="col">Nazwisko</th>
+                  <th scope="col">Opcje</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal modal-lg fade"
+      id="student-details-modal"
+      data-bs-backdrop="static"
+      tabindex="-1"
+      aria-labelledby="student-details-label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="student-details-label">
+              Szczegóły ucznia
+            </h1>
+            <button
+              type="button"
+              class="btn-close close-student-details-modal"
+              aria-label="Zamknij"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p>Imię i nazwisko: <span id="student-name"></span></p>
+            <p>Utworzono: <span id="student-created"></span></p>
+            <h5>Oceny</h5>
+            <button id="add-grade" class="btn btn-primary btn-sm mb-3">
+              Dodaj
+            </button>
+            <div id="grades-list"></div>
+            <p>
+              Średnia ważona:
+              <span id="weighted-average-text" class="fw-bold"></span>
+            </p>
+            <h5>Obecności</h5>
+            <button id="add-presence" class="btn btn-primary btn-sm mb-3">
+              Dodaj
+            </button>
+            <div id="presences-list"></div>
+            <p>
+              Liczba zajęć:
+              <span id="presence-count-text" class="fw-bold"></span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="add-grade-modal"
+      data-bs-backdrop="static"
+      tabindex="-1"
+      aria-labelledby="add-grade-label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="add-grade-label">Dodaj ocenę</h1>
+            <button
+              type="button"
+              class="btn-close close-grade-modal"
+              aria-label="Zamknij"
+            ></button>
+          </div>
+          <form id="add-grade-form" class="needs-validation" novalidate>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="value" class="form-label">Wartość</label>
+                <input
+                  type="number"
+                  name="value"
+                  class="form-control"
+                  id="value"
+                  min="1"
+                  max="6"
+                  step="1"
+                  required
+                />
+                <div class="invalid-feedback">Nieprawidłowa wartość</div>
+              </div>
+              <div class="mb-3">
+                <label for="idGradeType" class="form-label">Typ oceny</label>
+                <select
+                  name="idGradeType"
+                  class="form-select"
+                  id="add-idGradeType"
+                  aria-label="Wybierz typ oceny"
+                  required
+                ></select>
+                <div class="invalid-feedback">Typ oceny jest wymagany</div>
+              </div>
+              <div
+                class="alert alert-danger text-center"
+                id="add-grade-error"
+                role="alert"
+                style="display: none"
+              ></div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary close-grade-modal">
+                Zamknij
+              </button>
+              <button type="submit" class="btn btn-primary">Dodaj</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="edit-grade-modal"
+      data-bs-backdrop="static"
+      tabindex="-1"
+      aria-labelledby="edit-grade-label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="edit-grade-label">Edytuj ocenę</h1>
+            <button
+              type="button"
+              class="btn-close close-grade-modal"
+              aria-label="Zamknij"
+            ></button>
+          </div>
+          <form id="edit-grade-form" class="needs-validation" novalidate>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="value" class="form-label">Wartość</label>
+                <input
+                  type="number"
+                  name="value"
+                  class="form-control"
+                  id="value"
+                  min="1"
+                  max="6"
+                  step="1"
+                  required
+                />
+                <div class="invalid-feedback">Nieprawidłowa wartość</div>
+              </div>
+              <div class="mb-3">
+                <label for="idGradeType" class="form-label">Typ oceny</label>
+                <select
+                  name="idGradeType"
+                  class="form-select"
+                  id="edit-idGradeType"
+                  aria-label="Wybierz typ oceny"
+                  required
+                ></select>
+                <div class="invalid-feedback">Typ oceny jest wymagany</div>
+              </div>
+              <p>Utworzono: <span id="grade-created"></span></p>
+              <p>Zmodyfikowano: <span id="grade-updated"></span></p>
+              <div
+                class="alert alert-danger text-center"
+                id="edit-grade-error"
+                role="alert"
+                style="display: none"
+              ></div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-danger" id="delete-grade-button">
+                Usuń
+              </button>
+              <button type="button" class="btn btn-secondary close-grade-modal">
+                Zamknij
+              </button>
+              <button type="submit" class="btn btn-primary">Edytuj</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="add-presence-modal"
+      data-bs-backdrop="static"
+      tabindex="-1"
+      aria-labelledby="add-presence-label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="add-presence-label">
+              Dodaj obecność
+            </h1>
+            <button
+              type="button"
+              class="btn-close close-presence-modal"
+              aria-label="Zamknij"
+            ></button>
+          </div>
+          <form id="add-presence-form" class="needs-validation" novalidate>
+            <div class="modal-body">
+              <div class="mb-3">
+                <input
+                  type="checkbox"
+                  name="present"
+                  class="form-check-input"
+                  id="present"
+                />
+                <label for="present" class="form-label">Obecny</label>
+              </div>
+              <div
+                class="alert alert-danger text-center"
+                id="add-presence-error"
+                role="alert"
+                style="display: none"
+              ></div>
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary close-presence-modal"
+              >
+                Zamknij
+              </button>
+              <button type="submit" class="btn btn-primary">Dodaj</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="modal fade"
+      id="edit-presence-modal"
+      data-bs-backdrop="static"
+      tabindex="-1"
+      aria-labelledby="edit-presence-label"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="edit-presence-label">
+              Edytuj obecność
+            </h1>
+            <button
+              type="button"
+              class="btn-close close-presence-modal"
+              aria-label="Zamknij"
+            ></button>
+          </div>
+          <form id="edit-presence-form" class="needs-validation" novalidate>
+            <div class="modal-body">
+              <div class="mb-3">
+                <input
+                  type="checkbox"
+                  name="present"
+                  class="form-check-input"
+                  id="edit-present"
+                />
+                <label for="edit-present" class="form-label">Obecny</label>
+              </div>
+              <p>Utworzono: <span id="presence-created"></span></p>
+              <p>Zmodyfikowano: <span id="presence-updated"></span></p>
+              <h5>
+                <span class="badge bg-primary" id="presence-details"></span>
+              </h5>
+              <div
+                class="alert alert-danger text-center"
+                id="edit-presence-error"
+                role="alert"
+                style="display: none"
+              ></div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-danger" id="delete-presence-button">
+                Usuń
+              </button>
+              <button
+                type="button"
+                class="btn btn-secondary close-presence-modal"
+              >
+                Zamknij
+              </button>
+              <button type="submit" class="btn btn-primary">Edytuj</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <%- include('../partials/footer'); -%>
+
+    <script>
+      $(document).ready(function () {
+        let selectedIdCourse,
+          selectedIdStudent,
+          selectedIdCourseHasStudent,
+          selectedIdGrade,
+          selectedIdPresence;
+
+        let course;
+
+        const token = localStorage.getItem('ADL.token');
+        const courseName = $('#course-name');
+        const courseDay = $('#course-day');
+        const courseStart = $('#course-start');
+        const courseEnd = $('#course-end');
+        const courseCreated = $('#course-created');
+        const courseUpdated = $('#course-updated');
+        const nextPresenceDate = $('#next-presence-date');
+        const studentName = $('#student-name');
+        const studentCreated = $('#student-created');
+        const gradeCreated = $('#grade-created');
+        const gradeUpdated = $('#grade-updated');
+        const presenceCreated = $('#presence-created');
+        const presenceUpdated = $('#presence-updated');
+        const presenceDetails = $('#presence-details');
+
+        const addCourse = $('#add-course');
+        const addCourseModal = new bootstrap.Modal($('#add-course-modal'));
+        const addCourseForm = $('#add-course-form');
+        const addCourseError = $('#add-course-error');
+
+        const editCourseModal = new bootstrap.Modal($('#edit-course-modal'));
+        const editCourseForm = $('#edit-course-form');
+        const editCourseError = $('#edit-course-error');
+
+        const deleteCourseModal = new bootstrap.Modal(
+          $('#delete-course-modal')
+        );
+        const deleteCourseForm = $('#delete-course-form');
+        const deleteCourseError = $('#delete-course-error');
+
+        const courseDetailsModal = new bootstrap.Modal(
+          $('#course-details-modal')
+        );
+        const courseDetailsStudentsTable = $('#course-details-students-table');
+
+        const addGrade = $('#add-grade');
+        const addPresence = $('#add-presence');
+        const studentDetailsModal = new bootstrap.Modal(
+          $('#student-details-modal')
+        );
+        const addGradeModal = new bootstrap.Modal($('#add-grade-modal'));
+        const addGradeForm = $('#add-grade-form');
+        const addGradeError = $('#add-grade-error');
+
+        const editGradeModal = new bootstrap.Modal($('#edit-grade-modal'));
+        const editGradeForm = $('#edit-grade-form');
+        const editGradeError = $('#edit-grade-error');
+
+        const deleteGradeButton = $('#delete-grade-button');
+
+        const addPresenceModal = new bootstrap.Modal($('#add-presence-modal'));
+        const addPresenceForm = $('#add-presence-form');
+        const addPresenceError = $('#add-presence-error');
+
+        const editPresenceModal = new bootstrap.Modal(
+          $('#edit-presence-modal')
+        );
+        const editPresenceForm = $('#edit-presence-form');
+        const editPresenceError = $('#edit-presence-error');
+
+        const deletePresenceButton = $('#delete-presence-button');
+
+        const gradesList = $('#grades-list');
+        const weightedAverageText = $('#weighted-average-text');
+        const presencesList = $('#presences-list');
+        const presenceCountText = $('#presence-count-text');
+
+        const coursesTable = $('#courses-table');
+
+        const spinner = $('#spinner');
+        const content = $('#content');
+
+        const addIdUserHasSubject = $('#addIdUserHasSubject');
+        const editIdUserHasSubject = $('#editIdUserHasSubject');
+
+        const addStudents = $('#add-students');
+        const editStudents = $('#edit-students');
+
+        const addIdGradeType = $('#add-idGradeType');
+        const editIdGradeType = $('#edit-idGradeType');
+
+        let courses = null,
+          selectedStudent = null;
+
+        if (!token) {
+          window.location.replace('/sign-in');
+          return;
+        }
+
+        $('.close-modal').each(function () {
+          this.addEventListener('click', function () {
+            addCourseModal.hide();
+            addCourseForm.trigger('reset');
+            addCourseForm.removeClass('was-validated');
+            editCourseModal.hide();
+            editCourseForm.trigger('reset');
+            editCourseForm.removeClass('was-validated');
+            deleteCourseModal.hide();
+            courseDetailsModal.hide();
+          });
+        });
+
+        $('.close-student-details-modal').each(function () {
+          this.addEventListener('click', function () {
+            studentDetailsModal.hide();
+          });
+        });
+
+        $('.close-grade-modal').each(function () {
+          this.addEventListener('click', function () {
+            addGradeModal.hide();
+            addGradeForm.trigger('reset');
+            addGradeForm.removeClass('was-validated');
+            editGradeModal.hide();
+            editGradeForm.trigger('reset');
+            editGradeForm.removeClass('was-validated');
+          });
+        });
+
+        $('.close-presence-modal').each(function () {
+          this.addEventListener('click', function () {
+            addPresenceModal.hide();
+            addPresenceForm.trigger('reset');
+            addPresenceForm.removeClass('was-validated');
+            editPresenceModal.hide();
+            editPresenceForm.trigger('reset');
+            editPresenceForm.removeClass('was-validated');
+          });
+        });
+
+        function getSelectIdValues(select) {
+          let result = [];
+          let options = select && select.options;
+          let opt;
+
+          for (let i = 0, iLen = options.length; i < iLen; i++) {
+            opt = options[i];
+
+            if (opt.selected) {
+              result.push(Number(opt.value));
+            }
+          }
+
+          return result;
+        }
+
+        coursesTable.on('click', function (event) {
+          const target = $(event.target);
+          if (target.get(0).tagName === 'BUTTON') {
+            if (target.hasClass('edit-course')) {
+              selectedIdCourse = target.data('id');
+
+              $.ajax({
+                url: `/api/courses/${selectedIdCourse}`,
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }).done((res) => {
+                editCourseForm.find('#name').val(res.name);
+                editCourseForm
+                  .find('#editIdUserHasSubject')
+                  .val(res.id_user_has_subject);
+                editCourseForm.find('#day').val(res.day);
+                editCourseForm.find('#start').val(res.start.substring(0, 5));
+                editCourseForm.find('#end').val(res.end.substring(0, 5));
+                editCourseForm
+                  .find('#edit-students')
+                  .val(res.students.map((student) => student.id_student));
+              });
+
+              editCourseModal.show();
+            } else if (target.hasClass('delete-course')) {
+              selectedIdCourse = target.data('id');
+              deleteCourseModal.show();
+            } else if (target.hasClass('course-details')) {
+              selectedIdCourse = target.data('id');
+
+              $.ajax({
+                url: `/api/courses/${selectedIdCourse}`,
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }).done((res) => {
+                courseName.text(res.name);
+                courseDay.text(res.day);
+                courseStart.text(res.start);
+                courseEnd.text(res.end);
+                courseCreated.text(new Date(res.created).toLocaleString());
+                courseUpdated.text(new Date(res.updated).toLocaleString());
+
+                const currentDate = new Date();
+                let nextPresence = new Date(currentDate);
+
+                let daysDiff = dayToNumber(res.day) - nextPresence.getDay();
+                if (daysDiff < 0) {
+                  daysDiff += 7;
+                }
+
+                if (daysDiff !== 0) {
+                  nextPresence = addDaysToDate(nextPresence, daysDiff);
+                }
+
+                let nextPresenceStart = new Date(
+                  `${formatDate(nextPresence)} ${res.start}`
+                );
+
+                nextPresenceDate.text(
+                  `${nextPresenceStart.toLocaleString()} - ${res.end}`
+                );
+
+                let tableBody = '';
+                for (let i = 0; i < res.students.length; i++) {
+                  const student = res.students[i];
+
+                  tableBody += `<tr><th>${i + 1}</th><td>${
+                    student.name
+                  }</td><td>${
+                    student.surname
+                  }</td><td><button class="btn btn-primary m-1 student-details" data-id="${
+                    student.id_student
+                  }">Szczegóły</button></td></tr>`;
+                }
+
+                course = res;
+
+                courseDetailsStudentsTable.find('tbody').html(tableBody);
+              });
+
+              courseDetailsModal.show();
+            }
+          }
+        });
+
+        courseDetailsStudentsTable.on('click', function (event) {
+          const target = $(event.target);
+          if (target.get(0).tagName === 'BUTTON') {
+            if (target.hasClass('student-details')) {
+              selectedIdStudent = target.data('id');
+
+              getStudent();
+
+              studentDetailsModal.show();
+            }
+          }
+        });
+
+        gradesList.on('click', function (event) {
+          const target = $(event.target);
+          if (target.get(0).tagName === 'BUTTON') {
+            if (target.hasClass('grade')) {
+              selectedIdGrade = target.data('id');
+
+              const grade = selectedStudent.grades.find(
+                (grade) => grade.id_grade == selectedIdGrade
+              );
+
+              editGradeForm.find('#value').val(grade.value);
+              editGradeForm.find('#edit-idGradeType').val(grade.id_grade_type);
+
+              gradeCreated.text(new Date(grade.created).toLocaleString());
+              gradeUpdated.text(new Date(grade.updated).toLocaleString());
+
+              editGradeModal.show();
+            }
+          }
+        });
+
+        presencesList.on('click', function (event) {
+          const target = $(event.target);
+          if (target.get(0).tagName === 'BUTTON') {
+            if (target.hasClass('presence')) {
+              selectedIdPresence = target.data('id');
+
+              const presence = selectedStudent.presences.find(
+                (presence, idx) => {
+                  presence.lp = idx;
+                  return presence.id_presence == selectedIdPresence;
+                }
+              );
+
+              editPresenceForm
+                .find('#edit-present')
+                .attr('checked', !!presence.present);
+
+              presenceCreated.text(new Date(presence.created).toLocaleString());
+              presenceUpdated.text(new Date(presence.updated).toLocaleString());
+              presenceDetails.text(`${presence.lp + 1}. zajęcia`);
+
+              editPresenceModal.show();
+            }
+          }
+        });
+
+        function addDaysToDate(date, days) {
+          const newDate = new Date(date);
+
+          newDate.setUTCDate(newDate.getUTCDate() + days);
+
+          return newDate;
+        }
+
+        function dayToNumber(day) {
+          switch (day) {
+            case 'Poniedziałek':
+              return 1;
+            case 'Wtorek':
+              return 2;
+            case 'Środa':
+              return 3;
+            case 'Czwartek':
+              return 4;
+            case 'Piątek':
+              return 5;
+            case 'Sobota':
+              return 6;
+            default:
+              return 0;
+          }
+        }
+
+        function formatDate(date) {
+          let day = '' + date.getDate(),
+            month = '' + (date.getMonth() + 1),
+            year = date.getFullYear();
+
+          if (month.length < 2) month = '0' + month;
+          if (day.length < 2) day = '0' + day;
+
+          return [year, month, day].join('-');
+        }
+
+        function getStudent() {
+          $.ajax({
+            url: `/api/courses/${selectedIdCourse}/students/${selectedIdStudent}`,
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }).done((res) => {
+            studentName.text(`${res.name} ${res.surname}`);
+            studentCreated.text(new Date(res.created).toLocaleString());
+
+            let gradesHtml = '';
+            let presencesHtml = '';
+
+            let minGradePresenceCancel = null;
+            let cancelGradeCounter = 0;
+            for (let i = 0; i < res.grades.length; i++) {
+              const grade = res.grades[i];
+              if (grade.grade_type_presence_cancel) {
+                ++cancelGradeCounter;
+                if (
+                  !minGradePresenceCancel ||
+                  grade.value < minGradePresenceCancel.value
+                ) {
+                  minGradePresenceCancel = grade;
+                }
+              }
+            }
+
+            const currentDate = new Date();
+            let courseStartDate = new Date(course.created);
+
+            let daysDiff = dayToNumber(course.day) - courseStartDate.getDay();
+            if (daysDiff < 0) {
+              daysDiff += 7;
+            }
+
+            if (daysDiff !== 0) {
+              courseStartDate = addDaysToDate(courseStartDate, daysDiff);
+            }
+
+            let courseStart = new Date(
+              `${formatDate(courseStartDate)} ${course.start}`
+            );
+            let courseEnd = new Date(
+              `${formatDate(courseStartDate)} ${course.end}`
+            );
+
+            let lessonCounter = 0;
+            while (courseStart <= currentDate) {
+              courseStart = addDaysToDate(courseStart, 7);
+              courseEnd = addDaysToDate(courseEnd, 7);
+
+              ++lessonCounter;
+            }
+
+            let cancelGrade = false;
+
+            if (
+              res.presences.filter((presence) => presence.present).length >=
+              lessonCounter
+            ) {
+              cancelGrade = true;
+            }
+
+            if (
+              cancelGrade &&
+              minGradePresenceCancel &&
+              cancelGradeCounter > 1
+            ) {
+              minGradePresenceCancel.cancelled = true;
+            }
+
+            for (const grade of res.grades) {
+              gradesHtml += `<button class="btn ${
+                grade.cancelled ? 'btn-secondary' : 'btn-danger'
+              } m-1 grade" data-id="${grade.id_grade}">${grade.value}</button>`;
+            }
+
+            for (const presence of res.presences) {
+              presencesHtml += `<button class="btn ${
+                presence.present ? 'btn-success' : 'btn-danger'
+              } m-1 presence" data-id="${presence.id_presence}">${
+                presence.present ? 'Tak' : 'Nie'
+              }</button>`;
+            }
+
+            gradesList.html(gradesHtml);
+            presencesList.html(presencesHtml);
+
+            let weightedAverage = '-';
+            let numerator = 0;
+            let denominator = 0;
+            for (const grade of res.grades) {
+              if (grade.cancelled) {
+                continue;
+              }
+              numerator += grade.grade_type_weightage * grade.value;
+              denominator += grade.grade_type_weightage;
+            }
+
+            if (denominator !== 0) {
+              weightedAverage = (numerator / denominator).toFixed(2);
+            }
+
+            weightedAverageText.text(weightedAverage);
+            presenceCountText.text(res.presences.length);
+
+            selectedIdCourseHasStudent = res.id_course_has_student;
+
+            selectedStudent = res;
+          });
+        }
+
+        addCourse.on('click', function () {
+          addCourseModal.show();
+        });
+
+        addGrade.on('click', function () {
+          addGradeModal.show();
+        });
+
+        addPresence.on('click', function () {
+          addPresenceModal.show();
+        });
+
+        addCourseForm.on('submit', function (event) {
+          event.preventDefault();
+
+          if (this.checkValidity()) {
+            const { idUserHasSubject, name, day, start, end, students } = this;
+
+            const idsStudents = getSelectIdValues(students);
+
+            addCourseError.fadeOut();
+            $.ajax({
+              url: '/api/courses',
+              method: 'POST',
+              contentType: 'application/json',
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+              data: JSON.stringify({
+                idUserHasSubject: Number(idUserHasSubject.value),
+                name: name.value,
+                day: day.value,
+                start: `${start.value}:00Z`,
+                end: `${end.value}:00Z`,
+                students: idsStudents,
+              }),
+            })
+              .done((res) => {
+                getCourses();
+                addCourseModal.hide();
+                $(this).trigger('reset');
+                $(this).removeClass('was-validated');
+              })
+              .fail((err) => {
+                addCourseError.text(err.responseJSON.message).fadeIn();
+              });
+          }
+
+          $(this).addClass('was-validated');
+        });
+
+        editCourseForm.on('submit', function (event) {
+          event.preventDefault();
+
+          if (this.checkValidity()) {
+            const { name, day, start, end, students } = this;
+
+            const idsStudents = getSelectIdValues(students);
+
+            editCourseError.fadeOut();
+            $.ajax({
+              url: `/api/courses/${selectedIdCourse}`,
+              method: 'PUT',
+              contentType: 'application/json',
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+              data: JSON.stringify({
+                name: name.value,
+                day: day.value,
+                start: `${start.value}:00Z`,
+                end: `${end.value}:00Z`,
+                students: idsStudents,
+              }),
+            })
+              .done((res) => {
+                getCourses();
+                editCourseModal.hide();
+                $(this).trigger('reset');
+                $(this).removeClass('was-validated');
+              })
+              .fail((err) => {
+                editCourseError.text(err.responseJSON.message).fadeIn();
+              });
+          }
+
+          $(this).addClass('was-validated');
+        });
+
+        deleteCourseForm.on('submit', function (event) {
+          event.preventDefault();
+
+          deleteCourseError.fadeOut();
+          $.ajax({
+            url: `/api/courses/${selectedIdCourse}`,
+            method: 'DELETE',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+            .done((res) => {
+              getCourses();
+              deleteCourseModal.hide();
+            })
+            .fail((err) => {
+              deleteCourseError.text(err.responseJSON.message).fadeIn();
+            });
+        });
+
+        addGradeForm.on('submit', function (event) {
+          event.preventDefault();
+
+          if (this.checkValidity()) {
+            const { value, idGradeType } = this;
+
+            addGradeError.fadeOut();
+            $.ajax({
+              url: '/api/grades',
+              method: 'POST',
+              contentType: 'application/json',
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+              data: JSON.stringify({
+                idCourseHasStudent: selectedIdCourseHasStudent,
+                value: Number(value.value),
+                idGradeType: Number(idGradeType.value),
+              }),
+            })
+              .done((res) => {
+                getStudent();
+                addGradeModal.hide();
+                $(this).trigger('reset');
+                $(this).removeClass('was-validated');
+              })
+              .fail((err) => {
+                addGradeError.text(err.responseJSON.message).fadeIn();
+              });
+          }
+
+          $(this).addClass('was-validated');
+        });
+
+        editGradeForm.on('submit', function (event) {
+          event.preventDefault();
+
+          if (this.checkValidity()) {
+            const { value, idGradeType } = this;
+
+            editGradeError.fadeOut();
+            $.ajax({
+              url: `/api/grades/${selectedIdGrade}`,
+              method: 'PUT',
+              contentType: 'application/json',
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+              data: JSON.stringify({
+                value: Number(value.value),
+                idGradeType: Number(idGradeType.value),
+              }),
+            })
+              .done((res) => {
+                getStudent();
+                editGradeModal.hide();
+                $(this).trigger('reset');
+                $(this).removeClass('was-validated');
+              })
+              .fail((err) => {
+                editGradeError.text(err.responseJSON.message).fadeIn();
+              });
+          }
+
+          $(this).addClass('was-validated');
+        });
+
+        deleteGradeButton.on('click', function (event) {
+          event.preventDefault();
+
+          editGradeError.fadeOut();
+          $.ajax({
+            url: `/api/grades/${selectedIdGrade}`,
+            method: 'DELETE',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+            .done((res) => {
+              getStudent();
+              editGradeModal.hide();
+            })
+            .fail((err) => {
+              editGradeError.text(err.responseJSON.message).fadeIn();
+            });
+        });
+
+        addPresenceForm.on('submit', function (event) {
+          event.preventDefault();
+
+          if (this.checkValidity()) {
+            const { present } = this;
+
+            addPresenceError.fadeOut();
+            $.ajax({
+              url: '/api/presences',
+              method: 'POST',
+              contentType: 'application/json',
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+              data: JSON.stringify({
+                idCourseHasStudent: selectedIdCourseHasStudent,
+                present: present.checked,
+              }),
+            })
+              .done((res) => {
+                getStudent();
+                addPresenceModal.hide();
+                $(this).trigger('reset');
+                $(this).removeClass('was-validated');
+              })
+              .fail((err) => {
+                addPresenceError.text(err.responseJSON.message).fadeIn();
+              });
+          }
+
+          $(this).addClass('was-validated');
+        });
+
+        editPresenceForm.on('submit', function (event) {
+          event.preventDefault();
+
+          if (this.checkValidity()) {
+            const { present } = this;
+
+            editPresenceError.fadeOut();
+            $.ajax({
+              url: `/api/presences/${selectedIdPresence}`,
+              method: 'PUT',
+              contentType: 'application/json',
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+              data: JSON.stringify({
+                present: present.checked,
+              }),
+            })
+              .done((res) => {
+                getStudent();
+                editPresenceModal.hide();
+                $(this).trigger('reset');
+                $(this).removeClass('was-validated');
+              })
+              .fail((err) => {
+                editPresenceError.text(err.responseJSON.message).fadeIn();
+              });
+          }
+
+          $(this).addClass('was-validated');
+        });
+
+        deletePresenceButton.on('click', function (event) {
+          event.preventDefault();
+
+          editPresenceError.fadeOut();
+          $.ajax({
+            url: `/api/presences/${selectedIdPresence}`,
+            method: 'DELETE',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+            .done((res) => {
+              getStudent();
+              editPresenceModal.hide();
+            })
+            .fail((err) => {
+              editPresenceError.text(err.responseJSON.message).fadeIn();
+            });
+        });
+
+        function getStudents(page) {
+          $.ajax({
+            url: `/api/students?page=${page}`,
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }).done((res) => {
+            let studentsBody = '';
+            for (const student of res.rows) {
+              studentsBody += `<option value="${student.id_student}">${student.name} ${student.surname}</option>`;
+            }
+
+            addStudents.html(addStudents.html() + studentsBody);
+            editStudents.html(editStudents.html() + studentsBody);
+
+            if (res.pages > page) {
+              getStudents(page + 1);
+            }
+          });
+        }
+
+        getStudents(1);
+
+        $.ajax({
+          url: '/api/grade-types',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }).done((res) => {
+          let gradeTypesBody = '<option value="">Wybierz typ oceny</option>';
+          for (const gradeType of res) {
+            gradeTypesBody += `<option value="${gradeType.id_grade_type}">${gradeType.name} (${gradeType.weightage})</option>`;
+          }
+
+          addIdGradeType.html(gradeTypesBody);
+          editIdGradeType.html(gradeTypesBody);
+        });
+
+        function getCourses() {
+          spinner.removeClass('d-none');
+          content.addClass('d-none');
+
+          $.ajax({
+            url: '/api/users/me',
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }).done((res) => {
+            if (res.role === 'Nauczyciel') {
+              let idUserHasSubjectBody =
+                '<option value="">Wybierz przedmiot</option>';
+              for (const subject of res.subjects) {
+                idUserHasSubjectBody += `<option value="${subject.id_user_has_subject}">${subject.name}</option>`;
+              }
+
+              addIdUserHasSubject.html(idUserHasSubjectBody);
+              editIdUserHasSubject.html(idUserHasSubjectBody);
+
+              $.ajax({
+                url: `/api/users/me/courses`,
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }).done((res) => {
+                let tableBody = '';
+                for (let i = 0; i < res.length; i++) {
+                  const course = res[i];
+                  tableBody += `<tr><th>${i + 1}</th><td>${
+                    course.name
+                  }</td><td>${course.day}</td><td>${course.start}</td><td>${
+                    course.end
+                  }</td><td>${new Date(
+                    course.created
+                  ).toLocaleString()}</td><td>${new Date(
+                    course.updated
+                  ).toLocaleString()}</td><td><button class="btn btn-primary m-1 course-details" data-id="${
+                    course.id_course
+                  }">Szczegóły</button><button class="btn btn-primary m-1 edit-course" data-id="${
+                    course.id_course
+                  }">Edytuj</button><button class="btn btn-danger m-1 delete-course" data-id="${
+                    course.id_course
+                  }">Usuń</button></td></tr>`;
+                }
+
+                courses = res;
+
+                coursesTable.find('tbody').html(tableBody);
+
+                spinner.addClass('d-none');
+                content.removeClass('d-none');
+              });
+            } else {
+              window.location.replace('/profile');
+            }
+          });
+        }
+
+        getCourses();
+      });
+    </script>
+  </body>
+</html>

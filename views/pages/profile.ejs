@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pl-PL">
+  <head>
+    <%- include('../partials/head'); -%>
+  </head>
+  <body>
+    <%- include('../partials/header'); -%>
+
+    <main class="container">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="card bg-light">
+            <div class="card-body">
+              <h4>Informacje o użytkowniku</h4>
+              <br />
+              <p>Imię i nazwisko: <span id="name"></span></p>
+              <p>Rola: <span id="role"></span></p>
+              <p>Utworzono: <span id="created"></span></p>
+              <p>Przedmioty:</p>
+              <ul id="subjects"></ul>
+              <div id="courses"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <%- include('../partials/footer'); -%>
+
+    <script>
+      $(document).ready(function () {
+        const token = localStorage.getItem('ADL.token');
+        const name = $('#name');
+        const role = $('#role');
+        const created = $('#created');
+        const subjects = $('#subjects');
+        const courses = $('#courses');
+
+        if (!token) {
+          window.location.replace('/sign-in');
+          return;
+        }
+
+        $.ajax({
+          url: '/api/users/me',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }).done((res) => {
+          name.text(`${res.name} ${res.surname}`);
+          role.text(res.role);
+          created.text(new Date(res.created).toLocaleString());
+          let subjectsHtml = '';
+          for (const subject of res.subjects) {
+            subjectsHtml += `<li>${subject.name}</li>`;
+          }
+          subjects.html(subjectsHtml);
+
+          if (res.role === 'Nauczyciel') {
+            $.ajax({
+              url: '/api/users/me/courses',
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }).done((res) => {
+              let coursesHtml = '';
+              for (const course of res) {
+                coursesHtml += `<li>${course.name} (${course.subject_name}) - ${course.day} ${course.start} - ${course.end}</li>`;
+              }
+              courses.html(`<p>Kursy:</p><ul>${coursesHtml}</ul>`);
+            });
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

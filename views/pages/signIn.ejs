@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pl-PL">
+  <head>
+    <%- include('../partials/head'); -%>
+  </head>
+  <body>
+    <%- include('../partials/header'); -%>
+
+    <main class="container">
+      <h2 class="mb-5">Zaloguj się</h2>
+      <div class="row">
+        <div class="col-md-6">
+          <form id="sign-in-form" class="needs-validation" novalidate>
+            <div class="mb-3">
+              <label for="login" class="form-label">Login</label>
+              <input
+                type="text"
+                name="login"
+                class="form-control"
+                id="login"
+                maxlength="200"
+                required
+              />
+              <div class="invalid-feedback">Login jest wymagany</div>
+            </div>
+            <div class="mb-3">
+              <label for="password" class="form-label">Hasło</label>
+              <input
+                type="password"
+                name="password"
+                class="form-control"
+                id="password"
+                required
+              />
+              <div class="invalid-feedback">Hasło jest wymagane</div>
+            </div>
+            <button type="submit" class="btn btn-primary">Zaloguj się</button>
+            <div
+              class="alert alert-danger text-center mt-3"
+              id="error"
+              role="alert"
+              style="display: none"
+            ></div>
+          </form>
+        </div>
+      </div>
+    </main>
+
+    <%- include('../partials/footer'); -%>
+
+    <script>
+      $(document).ready(function () {
+        $('#sign-in-form').on('submit', function (event) {
+          const { target: form } = event;
+          const error = $('#error');
+          event.preventDefault();
+          event.stopPropagation();
+
+          if (form.checkValidity()) {
+            const {
+              login: { value: login },
+              password: { value: password },
+            } = form;
+
+            error.fadeOut();
+            $.post('/api/users/sign-in', {
+              login,
+              password,
+            })
+              .done((res) => {
+                localStorage.setItem('ADL.token', res.token);
+                window.location.replace('/profile');
+              })
+              .fail((err) => {
+                error.text(err.responseJSON.message).fadeIn();
+              });
+          }
+
+          $(form).addClass('was-validated');
+        });
+      });
+    </script>
+  </body>
+</html>
